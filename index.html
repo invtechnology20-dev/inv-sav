@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INV-SAV — INV Technology</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2563EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="INV-SAV">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface2: #EEF0F4;
+  --border: #D8DCE6;
+  --accent: #2563EB;
+  --glow: rgba(37,99,235,0.12);
+  --accent2: #D97706;
+  --accent3: #DC2626;
+  --green: #16A34A;
+  --orange: #EA580C;
+  --text: #111827;
+  --muted: #6B7280;
+  --dim: #E5E7EB;
+  --r: 10px;
+  --rs: 6px;
+}
+html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; }
+
+/* ── SETUP ── */
+.setup { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--bg); }
+.setup-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 100%; max-width: 460px; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+.setup-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -1px; margin-bottom: 4px; }
+.setup-logo span { color: var(--accent); }
+.setup-tagline { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+.setup-step { background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); padding: 12px 14px; margin-bottom: 10px; font-size: 12px; color: var(--muted); line-height: 1.7; }
+.setup-step strong { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 10px; }
+.setup-step a { color: var(--accent2); }
+.setup-step code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text); }
+
+/* ── HEADER ── */
+.header { display: flex; align-items: center; justify-content: space-between; padding: 13px 24px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+.h-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.5px; }
+.h-logo span { color: var(--accent); }
+.h-logo small { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); font-weight: 400; margin-left: 8px; letter-spacing: 1px; }
+.h-right { display: flex; align-items: center; gap: 12px; }
+.sync-pill { font-family: 'DM Mono', monospace; font-size: 10px; display: flex; align-items: center; gap: 5px; color: var(--muted); }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; transition: background 0.3s; }
+.sync-dot.syncing { background: var(--accent2); animation: blink 0.8s infinite; }
+.sync-dot.error { background: var(--accent3); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+.role-sw { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 3px; gap: 3px; }
+.role-btn { font-family: 'DM Mono', monospace; font-size: 10px; padding: 5px 13px; border-radius: 5px; border: none; cursor: pointer; background: transparent; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
+.role-btn.on { background: var(--accent); color: white; }
+
+/* ── LAYOUT ── */
+.main { padding: 24px; max-width: 960px; margin: 0 auto; }
+.view { display: none; }
+.view.on { display: block; }
+.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.st { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.st small { display: block; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); font-weight: 400; margin-top: 2px; letter-spacing: 0.5px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; margin-bottom: 18px; }
+
+/* ── FORM ── */
+.fg { margin-bottom: 13px; }
+.fl { display: block; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 5px; }
+.fi, .ft, .fs { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 9px 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.fi:focus, .ft:focus, .fs:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.ft { resize: vertical; min-height: 80px; }
+.fs option { background: var(--surface); }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 580px) { .g2, .g3 { grid-template-columns: 1fr; } }
+.sep { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 18px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+
+/* ── VOICE ── */
+.voice-btn { font-family: 'DM Mono', monospace; font-size: 10px; background: transparent; border: 1px solid var(--border); border-radius: var(--rs); color: var(--muted); padding: 4px 10px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+.voice-btn:hover { border-color: var(--accent); color: var(--accent); }
+.voice-btn.recording { border-color: var(--accent3); color: var(--accent3); animation: blink 0.8s infinite; }
+
+/* ── AI IMPROVE ── */
+.ai-btn { font-family: 'DM Mono', monospace; font-size: 10px; background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.2); border-radius: var(--rs); color: var(--accent); padding: 4px 10px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+.ai-btn:hover { background: rgba(79,142,247,0.15); }
+
+/* ── PHOTO ── */
+.drop { border: 1.5px dashed var(--border); border-radius: var(--rs); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--muted); font-size: 12px; position: relative; }
+.drop:hover { border-color: var(--accent); background: var(--glow); }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tw { position: relative; }
+.th { width: 62px; height: 62px; border-radius: var(--rs); object-fit: cover; border: 1px solid var(--border); display: block; }
+.tr { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; background: var(--accent3); color: white; border-radius: 50%; border: none; cursor: pointer; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+
+/* ── BUTTONS ── */
+.btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; padding: 9px 18px; border-radius: var(--rs); border: none; cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bp { background: var(--accent); color: white; }
+.bp:hover:not(:disabled) { background: #3a7be8; transform: translateY(-1px); }
+.bg { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.bg:hover { border-color: var(--accent); color: var(--accent); }
+.by { background: var(--accent2); color: #0c0e14; }
+.bsm { padding: 6px 12px; font-size: 10px; }
+.bgn { background: rgba(79,247,160,0.12); color: var(--green); border: 1px solid rgba(79,247,160,0.3); }
+
+/* ── BADGES ── */
+.badge { font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.b-open     { background: rgba(79,142,247,0.15); color: var(--accent);   border: 1px solid rgba(79,142,247,0.3); }
+.b-progress { background: rgba(247,193,79,0.15);  color: var(--accent2);  border: 1px solid rgba(247,193,79,0.3); }
+.b-resolved { background: rgba(79,247,160,0.15);  color: var(--green);    border: 1px solid rgba(79,247,160,0.3); }
+.b-closed   { background: rgba(107,111,133,0.15); color: var(--muted);    border: 1px solid rgba(107,111,133,0.3); }
+
+/* ── CONCLUSION ── */
+.concl-badge { font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: var(--rs); display: inline-block; white-space: nowrap; }
+.cg  { background: rgba(79,247,160,0.1);  color: var(--green);   border: 1px solid rgba(79,247,160,0.3); }
+.cf  { background: rgba(247,193,79,0.1);  color: var(--accent2); border: 1px solid rgba(247,193,79,0.3); }
+.ca  { background: rgba(79,142,247,0.1);  color: var(--accent);  border: 1px solid rgba(79,142,247,0.3); }
+.cs  { background: rgba(247,145,79,0.1);  color: var(--orange);  border: 1px solid rgba(247,145,79,0.3); }
+.cr  { background: rgba(247,79,122,0.1);  color: var(--accent3); border: 1px solid rgba(247,79,122,0.3); }
+.cw  { background: rgba(107,111,133,0.1); color: var(--muted);   border: 1px solid var(--border); }
+.cn  { color: var(--dim); font-style: italic; font-size: 11px; }
+
+/* ── TIMER ── */
+.timer { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 8px; border-radius: 4px; }
+.tok  { background: rgba(79,247,160,0.1);  color: var(--green); }
+.twrn { background: rgba(247,193,79,0.1);  color: var(--accent2); }
+.tlate{ background: rgba(247,79,122,0.1);  color: var(--accent3); }
+
+/* ── TICKET CARDS ── */
+.tlist { display: flex; flex-direction: column; gap: 10px; }
+.tc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 15px 18px; cursor: pointer; transition: all 0.2s; }
+.tc:hover { border-color: var(--accent); transform: translateX(2px); box-shadow: 0 4px 20px rgba(79,142,247,0.08); }
+.tc-top { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+.tc-ref { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 1px; margin-bottom: 3px; }
+.tc-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.tc-meta { font-size: 11px; color: var(--muted); }
+.tc-bottom { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+
+/* ── FILTERS ── */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.fc { font-family: 'DM Mono', monospace; font-size: 9px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.15s; background: transparent; }
+.fc:hover { border-color: var(--accent); color: var(--accent); }
+.fc.on { background: rgba(79,142,247,0.12); color: var(--accent); border-color: rgba(79,142,247,0.3); }
+
+/* ── MODAL ── */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(6px); z-index: 200; padding: 20px; overflow-y: auto; }
+.modal.on { display: flex; align-items: flex-start; justify-content: center; }
+.mpanel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 700px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.6); margin: auto; }
+.mhead { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+.mbody { padding: 22px; }
+.ms { margin-bottom: 20px; }
+.mst { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.ig { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.il .il-l { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+.il .il-v { font-size: 13px; color: var(--text); }
+
+/* ── STATUS PILLS ── */
+.spills { display: flex; gap: 6px; flex-wrap: wrap; }
+.sp { font-family: 'DM Mono', monospace; font-size: 10px; padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.sp:hover { border-color: var(--accent); color: var(--accent); }
+.sp-open     { background: rgba(79,142,247,0.15); color: var(--accent);  border-color: rgba(79,142,247,0.4); }
+.sp-progress { background: rgba(247,193,79,0.15);  color: var(--accent2); border-color: rgba(247,193,79,0.4); }
+.sp-resolved { background: rgba(79,247,160,0.15);  color: var(--green);   border-color: rgba(79,247,160,0.4); }
+.sp-closed   { background: rgba(107,111,133,0.15); color: var(--muted);   border-color: rgba(107,111,133,0.4); }
+
+/* ── CONCLUSION PICKER ── */
+.cpicker { display: flex; flex-direction: column; gap: 7px; }
+.copt { display: flex; align-items: center; gap: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); padding: 10px 14px; cursor: pointer; transition: all 0.15s; }
+.copt:hover { border-color: var(--accent); }
+.copt.sel-g  { border-color: rgba(79,247,160,0.5);  background: rgba(79,247,160,0.04); }
+.copt.sel-f  { border-color: rgba(247,193,79,0.5);  background: rgba(247,193,79,0.04); }
+.copt.sel-a  { border-color: rgba(79,142,247,0.5);  background: rgba(79,142,247,0.04); }
+.copt.sel-s  { border-color: rgba(247,145,79,0.5);  background: rgba(247,145,79,0.04); }
+.copt.sel-r  { border-color: rgba(247,79,122,0.5);  background: rgba(247,79,122,0.04); }
+.copt.sel-w  { border-color: rgba(107,111,133,0.5); background: rgba(107,111,133,0.04); }
+.copt-icon { font-size: 18px; flex-shrink: 0; }
+.copt-label { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 13px; }
+.copt-desc  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* ── CHAT ── */
+.chatbox { background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); height: 220px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+.cm { display: flex; flex-direction: column; max-width: 76%; }
+.cm.cl { align-self: flex-start; }
+.cm.ct { align-self: flex-end; }
+.cb { padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5; }
+.cm.cl .cb { background: var(--surface2); color: var(--text); border-bottom-left-radius: 2px; }
+.cm.ct .cb { background: rgba(79,142,247,0.12); color: #8cb8ff; border: 1px solid rgba(79,142,247,0.2); border-bottom-right-radius: 2px; }
+.cm-meta { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 3px; padding: 0 2px; }
+.cm.ct .cm-meta { text-align: right; }
+.chat-row { display: flex; gap: 8px; margin-top: 8px; }
+.chat-row .fi { flex: 1; }
+
+/* ── HISTORY ── */
+.hist-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.hist-item:last-child { border-bottom: none; }
+.hist-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.hist-date { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); }
+
+/* ── EMAIL CONFIRM MODAL ── */
+.emodal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(8px); z-index: 300; padding: 20px; overflow-y: auto; }
+.emodal.on { display: flex; align-items: center; justify-content: center; }
+.epanel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 500px; padding: 28px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+.etitle { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+.esub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+.rlist { background: var(--bg); border: 1px solid var(--border); border-radius: var(--rs); overflow: hidden; margin-bottom: 16px; }
+.rrow { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.rrow:last-child { border-bottom: none; }
+.rl { font-size: 11px; color: var(--muted); }
+.re { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text); }
+.recap { background: rgba(79,142,247,0.06); border: 1px solid rgba(79,142,247,0.2); border-radius: var(--rs); padding: 12px 14px; margin-bottom: 16px; }
+.rr { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+.rrl { color: var(--muted); }
+.rrv { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text); }
+
+/* ── CONFIRM BOX ── */
+.confbox { background: rgba(79,142,247,0.06); border: 1px solid rgba(79,142,247,0.2); border-radius: var(--rs); padding: 14px 18px; margin-top: 12px; display: none; }
+.confbox.on { display: block; }
+.confref { font-family: 'DM Mono', monospace; font-size: 24px; color: var(--accent); letter-spacing: 3px; }
+
+/* ── AT LINK ── */
+.atlink { display: inline-flex; align-items: center; gap: 5px; background: rgba(247,193,79,0.08); border: 1px solid rgba(247,193,79,0.2); border-radius: var(--rs); padding: 5px 12px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent2); text-decoration: none; transition: all 0.2s; }
+.atlink:hover { background: rgba(247,193,79,0.15); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface); border: 1px solid var(--accent); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 11px; padding: 10px 18px; border-radius: var(--rs); z-index: 9999; transform: translateY(60px); opacity: 0; transition: all 0.3s; letter-spacing: 0.5px; max-width: 300px; }
+.toast.on { transform: translateY(0); opacity: 1; }
+.toast.err { border-color: var(--accent3); color: var(--accent3); }
+
+/* ── MISC ── */
+.empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 13px; }
+.empty-i { font-size: 36px; margin-bottom: 10px; }
+.xbtn { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s; }
+.xbtn:hover { color: var(--text); }
+.spin { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: sp 0.6s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.gy { color: var(--green); font-size: 12px; }
+.gn { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+
+
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+<header class="header">
+  <div class="h-logo">INV<span>-</span>SAV <small>TECHNOLOGY</small></div>
+  <div class="h-right">
+    <div class="sync-pill"><div class="sync-dot" id="sdot"></div><span id="slbl">—</span></div>
+    <div class="role-sw">
+      <button class="role-btn on" onclick="switchRole('client')">👤 Client</button>
+      <button class="role-btn" onclick="switchRole('tech')">🔧 Technicien</button>
+      <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;cursor:pointer;letter-spacing:.5px;">📲 Installer l'app</button>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- ══ CLIENT ══ -->
+<div id="v-client" class="view on">
+  <div class="sh">
+    <div class="st">Déclarer une panne<small>TICKET SAV — INV TECHNOLOGY</small></div>
+  </div>
+  <div class="card">
+    <div class="sep">Vos coordonnées</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">Nom complet *</label><input class="fi" id="c-nom" placeholder="Jean Dupont"></div>
+      <div class="fg"><label class="fl">Société</label><input class="fi" id="c-soc" placeholder="Ma Société SARL"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label class="fl">Email *</label><input class="fi" id="c-email" type="email" placeholder="jean@societe.com"></div>
+      <div class="fg"><label class="fl">Téléphone</label><input class="fi" id="c-tel" placeholder="06 00 00 00 00"></div>
+    </div>
+    <div class="sep">Matériel en panne</div>
+    <div class="g3">
+      <div class="fg">
+        <label class="fl">Type *</label>
+        <select class="fs" id="c-type">
+          <option value="">— Sélectionner</option>
+          <option>Caméra IP</option>
+          <option>Caméra COAX / AHD</option>
+          <option>Caméra PTZ</option>
+          <option>Caméra 4G / Solaire</option>
+          <option>Caméra Thermique</option>
+          <option>Enregistreur NVR / DVR</option>
+          <option>Alarme intrusion</option>
+          <option>Contrôle d'accès</option>
+          <option>Switch / Réseau</option>
+          <option>Routeur / Wifi</option>
+          <option>Liaison radio hertzienne</option>
+          <option>Accessoires</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Référence / N° de série</label><input class="fi" id="c-ref" placeholder="SN-XXXXXX"></div>
+      <div class="fg"><label class="fl">Date d'achat</label><input class="fi" id="c-da" type="date"></div>
+    </div>
+    <div class="g2">
+      <div class="fg">
+        <label class="fl">Priorité</label>
+        <select class="fs" id="c-prio">
+          <option value="Faible">🟢 Faible</option>
+          <option value="Normale" selected>🟠 Normale</option>
+          <option value="Urgente">🔴 Urgente</option>
+        </select>
+      </div>
+      <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--muted);">
+          <input type="checkbox" id="c-gar" style="width:15px;height:15px;accent-color:var(--accent);">Sous garantie
+        </label>
+      </div>
+    </div>
+    <div class="sep">
+      Description de la panne
+      <button class="voice-btn" id="voice-desc-btn" onclick="toggleVoice('c-desc','voice-desc-btn')">🎙️ Dicter</button>
+    </div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <label class="fl" style="margin:0;">Objet *</label>
+        <button class="ai-btn" onclick="improveField('c-obj','objet')">✦ Améliorer IA</button>
+      </div>
+      <input class="fi" id="c-obj" placeholder="Ex : Caméra IP hors ligne, enregistreur NVR ne démarre plus...">
+    </div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <label class="fl" style="margin:0;">Description *</label>
+        <button class="ai-btn" onclick="improveField('c-desc','description')">✦ Améliorer IA</button>
+      </div>
+      <textarea class="ft" id="c-desc" placeholder="Décrivez la panne, depuis quand, ce qui a été essayé, référence du site ou de l'installation..."></textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">Photos / Captures d'écran</label>
+      <div class="drop">
+        <input type="file" accept="image/*" multiple onchange="addPhotos(this)">
+        <div style="font-size:22px;margin-bottom:5px;">📎</div>
+        <div>Cliquez ou déposez vos fichiers ici</div>
+        <div style="font-size:11px;margin-top:3px;color:var(--dim);">Photos, captures d'écran, messages d'erreur</div>
+      </div>
+      <div class="previews" id="prev"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn bp" onclick="submitTicket()" id="sub-btn">⚡ Envoyer le ticket</button>
+    </div>
+    <div class="confbox" id="confbox">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;">TICKET ENREGISTRÉ — TECHNICIENS ALERTÉS</div>
+      <div class="confref" id="confref">SAV-2026-000</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Accusé de réception envoyé. Notre équipe prend en charge votre demande.</div>
+    </div>
+  </div>
+  <div class="sh" style="margin-top:28px;">
+    <div class="st">Mes tickets<small>SUIVI DE VOS DEMANDES</small></div>
+    <button class="btn bg bsm" onclick="loadTickets()">↺ Actualiser</button>
+  </div>
+  <div class="tlist" id="cl-list"><div class="empty"><div class="empty-i">📋</div>Aucun ticket.</div></div>
+</div>
+
+<!-- ══ TECHNICIEN ══ -->
+<div id="v-tech" class="view">
+  <div class="sh">
+    <div class="st">Tickets SAV<small id="tc-count">—</small></div>
+    <div style="display:flex;gap:8px;">
+      <a class="atlink" id="at-lnk" href="#" target="_blank">📊 Airtable</a>
+      <button class="btn bg bsm" onclick="loadTickets()">↺ Actualiser</button>
+    </div>
+  </div>
+  <div class="filters" id="filter-bar">
+    <button class="fc on" onclick="setFilter('all',this)">Tous</button>
+    <button class="fc" onclick="setFilter('open',this)">🔵 Ouverts</button>
+    <button class="fc" onclick="setFilter('progress',this)">🟡 En cours</button>
+    <button class="fc" onclick="setFilter('resolved',this)">🟢 Résolus</button>
+    <button class="fc" onclick="setFilter('urgent',this)">🔴 Urgents</button>
+    <button class="fc" onclick="setFilter('Maxence',this)">Maxence</button>
+    <button class="fc" onclick="setFilter('Patrick',this)">Patrick</button>
+    <button class="fc" onclick="setFilter('Alex',this)">Alex</button>
+  </div>
+  <div class="tlist" id="tech-list"><div class="empty"><div class="empty-i">⚡</div>Chargement...</div></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════ MODAL TICKET ══════════ -->
+<div class="modal" id="modal">
+  <div class="mpanel">
+    <div class="mhead">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;" id="m-ref">—</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-top:3px;" id="m-title">—</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge" id="m-badge">—</span>
+        <button class="xbtn" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="mbody">
+
+      <div class="ms">
+        <div class="mst">Client</div>
+        <div class="ig">
+          <div class="il"><div class="il-l">Nom</div><div class="il-v" id="m-nom">—</div></div>
+          <div class="il"><div class="il-l">Société</div><div class="il-v" id="m-soc">—</div></div>
+          <div class="il"><div class="il-l">Email</div><div class="il-v" id="m-email">—</div></div>
+          <div class="il"><div class="il-l">Téléphone</div><div class="il-v" id="m-tel">—</div></div>
+        </div>
+      </div>
+
+      <div class="ms">
+        <div class="mst">Matériel</div>
+        <div class="ig">
+          <div class="il"><div class="il-l">Type</div><div class="il-v" id="m-type">—</div></div>
+          <div class="il"><div class="il-l">Réf / N° série</div><div class="il-v" id="m-ref2">—</div></div>
+          <div class="il"><div class="il-l">Date achat</div><div class="il-v" id="m-da">—</div></div>
+          <div class="il"><div class="il-l">Garantie</div><div class="il-v" id="m-gar">—</div></div>
+        </div>
+      </div>
+
+      <div class="ms">
+        <div class="mst">Description</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;" id="m-desc">—</div>
+      </div>
+
+      <div class="ms" id="m-photos-s" style="display:none;">
+        <div class="mst">Pièces jointes</div>
+        <div class="previews" id="m-photos"></div>
+      </div>
+
+      <!-- Historique statuts -->
+      <div class="ms" id="m-hist-s">
+        <div class="mst">Historique</div>
+        <div id="m-hist"></div>
+      </div>
+
+      <!-- ZONE TECH -->
+      <div id="tz" style="display:none;">
+        <div class="ms">
+          <div class="mst">Statut</div>
+          <div class="spills" id="spills"></div>
+        </div>
+        <div class="ms">
+          <div class="mst">Technicien assigné</div>
+          <select class="fs" id="m-tech-sel">
+            <option value="">— Sélectionner</option>
+            <option value="Maxence">Maxence</option>
+            <option value="Patrick">Patrick</option>
+            <option value="Alex">Alex</option>
+          </select>
+        </div>
+        <div class="ms">
+          <div class="mst">Conclusion SAV <span style="color:var(--accent2);">→ Airtable</span></div>
+          <div class="cpicker" id="cpicker"></div>
+        </div>
+        <div class="ms">
+          <div class="mst">
+            Note technicien
+            <div style="display:flex;gap:6px;">
+              <button class="voice-btn" id="voice-note-btn" onclick="toggleVoice('m-note','voice-note-btn')">🎙️ Dicter</button>
+              <button class="ai-btn" onclick="improveNote()">✦ Améliorer IA</button>
+            </div>
+          </div>
+          <textarea class="ft" id="m-note" placeholder="Diagnostic, pièces, interventions..."></textarea>
+        </div>
+        <div class="ms">
+          <div class="mst">Devis estimé <span style="color:var(--dim);font-size:8px;">(si facturable)</span></div>
+          <div class="g2">
+            <div class="fg"><label class="fl">Montant HT</label><input class="fi" id="m-devis" type="number" placeholder="0.00" step="0.01"></div>
+            <div class="fg"><label class="fl">Référence devis</label><input class="fi" id="m-devis-ref" placeholder="DEV-XXXX"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+          <button class="btn by bsm" onclick="saveTech()">💾 Sauvegarder → Airtable</button>
+          <button class="btn bg bsm" onclick="generatePDF()">📄 PDF rapport</button>
+          <button class="btn bgn bsm" onclick="openEmailConfirm()">📧 Clôturer & envoyer rapport</button>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="ms">
+        <div class="mst">Messagerie <span id="chat-who" style="color:var(--accent);font-size:9px;"></span></div>
+        <div class="chatbox" id="chatbox"></div>
+        <div id="chat-tech-tools" style="display:flex;gap:6px;margin-top:6px;margin-bottom:6px;">
+          <button class="voice-btn" id="voice-chat-btn" onclick="toggleVoice('chat-in','voice-chat-btn')">🎙️ Dicter</button>
+          <button class="ai-btn" onclick="improveChat()">✦ Améliorer IA</button>
+        </div>
+        <div class="chat-row">
+          <textarea class="fi" id="chat-in" placeholder="Votre message..." rows="3" style="resize:vertical;min-height:64px;line-height:1.5;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="btn bp bsm" onclick="sendMsg()">→</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ EMAIL CONFIRM MODAL ══════════ -->
+<div class="emodal" id="emodal">
+  <div class="epanel">
+    <div class="etitle">📧 Envoyer le rapport final</div>
+    <div class="esub">Vérifiez les destinataires avant l'envoi. Le rapport complet sera inclus dans l'email.</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;">Résumé du dossier</div>
+    <div class="recap" id="e-recap"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;">Destinataires</div>
+    <div class="rlist">
+      <div class="rrow"><div><div class="rl">📊 Comptable</div><div class="re">saveria@inv-technology.com</div></div><span style="font-size:9px;color:var(--green);font-family:'DM Mono',monospace;">✓ Toujours</span></div>
+      <div class="rrow"><div><div class="rl">👨‍💼 Président</div><div class="re">noireaux@inv-technology.com</div></div><span style="font-size:9px;color:var(--green);font-family:'DM Mono',monospace;">✓ Toujours</span></div>
+      <div class="rrow"><div><div class="rl">🔧 Technicien (copie)</div><div class="re" id="e-tech-email">—</div></div><span style="font-size:9px;color:var(--green);font-family:'DM Mono',monospace;">✓ Auto</span></div>
+      <div class="rrow"><div><div class="rl">👤 Client (optionnel)</div><div class="re" id="e-client-email">—</div></div><div style="display:flex;align-items:center;gap:6px;"><label style="display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;color:var(--accent2);cursor:pointer;"><input type="checkbox" id="e-client-cb" style="accent-color:var(--accent2);width:13px;height:13px;"> Inclure</label></div></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn bg bsm" onclick="closeEmailConfirm()">Annuler</button>
+      <button class="btn bp bsm" onclick="sendFinalReport()" id="e-send-btn">✓ Confirmer et envoyer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ PASSWORD MODAL ══════════ -->
+<div class="modal" id="pwd-modal">
+  <div class="mpanel" style="max-width:380px;">
+    <div class="mhead">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;">Accès Technicien</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;">Zone réservée au personnel INV Technology</div>
+      </div>
+      <button class="xbtn" onclick="document.getElementById('pwd-modal').classList.remove('on')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="fg">
+        <label class="fl">Mot de passe</label>
+        <input class="fi" id="pwd-input" type="password" placeholder="••••••••••••••" onkeydown="if(event.key==='Enter')checkPassword()">
+      </div>
+      <div id="pwd-error" style="display:none;color:var(--accent3);font-size:12px;font-family:'DM Mono',monospace;margin-bottom:12px;">⚠ Mot de passe incorrect</div>
+      <button class="btn bp" style="width:100%;justify-content:center;" onclick="checkPassword()">→ Accéder</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Service Worker PWA
+// PWA Install
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+  showToast('✓ Application installée sur votre écran d\'accueil !');
+});
+async function installPWA() {
+  if (!deferredPrompt) {
+    showToast('Utilisez le menu de votre navigateur → Ajouter à l\'écran d\'accueil', true);
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+// ══════════════════════════════════════
+// EMAILJS INIT
+// ══════════════════════════════════════
+emailjs.init('fHDmIrV57-6gDn4Dj');
+const EJS_SERVICE  = 'service_241ve2e';
+const EJS_T1       = 'template_yfhfgf2'; // alerte ouverture
+const EJS_T2       = 'template_12wpxqb'; // rapport final
+
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+let TOKEN='pataz8jR8FAipH5to.c189c92c2470b6c9c991975272c7548d54e783206b7c3308b2d371aff6d3ac56';
+let BASE_ID='app6wZenDfUSQfLkp', TABLE_ID='tblnqqDjqweDWDlGA';
+let BASE_URL=`https://airtable.com/${BASE_ID}/${TABLE_ID}`;
+let role='client', tickets=[], photos=[], currentId=null, ticketCounter=0;
+let filterMode='all';
+let mediaRecorder=null, audioChunks=[];
+
+const TECHS = {
+  'Maxence': 'maxence@inv-technology.com',
+  'Patrick': 'commercial@inv-technology.com',
+  'Alex':    'noireaux@inv-technology.com'
+};
+const ALL_TECH_EMAILS = Object.values(TECHS);
+
+const CONCLUSIONS = [
+  { key:'g', icon:'✅', label:'Pris sous garantie',              desc:'Remplacement ou réparation sans frais',  cls:'cg', sel:'sel-g' },
+  { key:'f', icon:'📦', label:'Remplacement facturable',          desc:'Devis à créer et envoyer au client',     cls:'cf', sel:'sel-f' },
+  { key:'a', icon:'🔧', label:'Réparation en atelier',            desc:'Matériel pris en charge en atelier',     cls:'ca', sel:'sel-a' },
+  { key:'s', icon:'🚗', label:'Intervention technicien sur site', desc:'Déplacement à planifier chez le client', cls:'cs', sel:'sel-s' },
+  { key:'r', icon:'❌', label:'Non couvert — refus SAV',          desc:'Hors garantie, aucune prise en charge',  cls:'cr', sel:'sel-r' },
+  { key:'w', icon:'⏳', label:'En attente de pièces',             desc:'Commande pièces en cours',               cls:'cw', sel:'sel-w' },
+];
+const CBYKEY   = Object.fromEntries(CONCLUSIONS.map(c=>[c.key,c]));
+const CBYLABEL = Object.fromEntries(CONCLUSIONS.map(c=>[c.label,c]));
+
+const SL = { open:'Ouvert', progress:'En cours', resolved:'Résolu', closed:'Clôturé' };
+const SFAT = { 'Ouvert':'open','En cours':'progress','Résolu':'resolved','Clôturé':'closed' };
+const SBC  = { open:'b-open', progress:'b-progress', resolved:'b-resolved', closed:'b-closed' };
+const SPC  = { open:'sp-open', progress:'sp-progress', resolved:'sp-resolved', closed:'sp-closed' };
+const HIST_COLORS = { open:'var(--accent)', progress:'var(--accent2)', resolved:'var(--green)', closed:'var(--muted)' };
+
+// ══════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════
+async function initSetup() {
+  const token = document.getElementById('s-token').value.trim();
+  if (!token.startsWith('pat')) { showSetupErr('Token invalide — doit commencer par "pat..."'); return; }
+  TOKEN = token;
+  const btn = document.getElementById('s-btn');
+  btn.innerHTML = '<span class="spin"></span> Création en cours...'; btn.disabled = true;
+  document.getElementById('s-err').style.display = 'none';
+  try {
+    const wsId = 'wspWRhl0ArG3hHjFN';
+    const br = await apiFetch('https://api.airtable.com/v0/meta/bases','POST',{
+      name:'SAV INV Technology', workspaceId: wsId,
+      tables:[{ name:'Tickets SAV', fields: buildFields() }]
+    });
+    if (!br.id) throw new Error(br.error?.message || 'Erreur création base');
+    BASE_ID=br.id; TABLE_ID=br.tables[0].id;
+    BASE_URL=`https://airtable.com/${BASE_ID}/${TABLE_ID}`;
+    localStorage.setItem('inv_t',TOKEN); localStorage.setItem('inv_b',BASE_ID); localStorage.setItem('inv_tb',TABLE_ID);
+    showApp();
+  } catch(e) {
+    showSetupErr('Erreur : '+e.message);
+    btn.innerHTML='⚡ Créer la base et démarrer'; btn.disabled=false;
+  }
+}
+
+function buildFields() {
+  return [
+    {name:'Référence ticket',type:'singleLineText'},
+    {name:'Statut',type:'singleSelect',options:{choices:[{name:'Ouvert',color:'blueLight2'},{name:'En cours',color:'yellowLight2'},{name:'Résolu',color:'greenLight2'},{name:'Clôturé',color:'grayLight2'}]}},
+    {name:'Priorité',type:'singleSelect',options:{choices:[{name:'Faible',color:'greenLight2'},{name:'Normale',color:'yellowLight2'},{name:'Urgente',color:'redLight2'}]}},
+    {name:'Conclusion SAV',type:'singleSelect',options:{choices:CONCLUSIONS.map(c=>({name:c.label}))}},
+    {name:'Nom client',type:'singleLineText'},{name:'Société client',type:'singleLineText'},
+    {name:'Email client',type:'email'},{name:'Téléphone client',type:'phoneNumber'},
+    {name:'Type de matériel',type:'singleSelect',options:{choices:['Caméra IP','Caméra COAX / AHD','Caméra PTZ','Caméra 4G / Solaire','Caméra Thermique','Enregistreur NVR / DVR','Alarme intrusion','Contrôle d\'accès','Switch / Réseau','Routeur / Wifi','Liaison radio hertzienne','Accessoires','Autre'].map(n=>({name:n}))}},
+    {name:'Référence / N° série',type:'singleLineText'},
+    {name:'Date achat',type:'date',options:{dateFormat:{name:'european'}}},
+    {name:'Sous garantie',type:'checkbox',options:{icon:'check',color:'greenBright'}},
+    {name:'Objet',type:'singleLineText'},{name:'Description',type:'multilineText'},
+    {name:'Photos / Pièces jointes',type:'multipleAttachments'},
+    {name:'Note technicien',type:'multilineText'},{name:'Technicien assigné',type:'singleLineText'},
+    {name:'Devis HT',type:'number',options:{precision:2}},{name:'Référence devis',type:'singleLineText'},
+    {name:'Messages',type:'multilineText'},{name:'Historique statuts',type:'multilineText'},
+    {name:'Date création',type:'dateTime',options:{timeZone:'Europe/Paris',dateFormat:{name:'european'},timeFormat:{name:'24hour'}}},
+    {name:'Date résolution',type:'dateTime',options:{timeZone:'Europe/Paris',dateFormat:{name:'european'},timeFormat:{name:'24hour'}}},
+  ];
+}
+
+function showSetupErr(m) { const e=document.getElementById('s-err'); e.textContent=m; e.style.display='block'; }
+
+function showApp() {
+  document.getElementById('app').style.display='block';
+  document.getElementById('at-lnk').href=BASE_URL;
+  setSyncStatus('ok'); loadTickets();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('at-lnk').href = BASE_URL;
+  showApp();
+});
+
+// ══════════════════════════════════════
+// API AIRTABLE
+// ══════════════════════════════════════
+async function apiFetch(url,method='GET',body=null) {
+  const r=await fetch(url,{method,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  return r.json();
+}
+function atBase() { return `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent('Tickets SAV')}`; }
+
+// ══════════════════════════════════════
+// LOAD
+// ══════════════════════════════════════
+async function loadTickets() {
+  setSyncStatus('syncing');
+  try {
+    const d=await apiFetch(atBase()+'?sort[0][field]=Date%20cr%C3%A9ation&sort[0][direction]=desc&pageSize=100');
+    tickets=(d.records||[]).map(r=>({
+      id:r.id,
+      ref:r.fields['Référence ticket']||'—',
+      statut:r.fields['Statut']||'Ouvert',
+      prio:r.fields['Priorité']||'Normale',
+      conclusion:r.fields['Conclusion SAV']||'',
+      nom:r.fields['Nom client']||'',
+      soc:r.fields['Société client']||'',
+      email:r.fields['Email client']||'',
+      tel:r.fields['Téléphone client']||'',
+      type:r.fields['Type de matériel']||'',
+      refProd:r.fields['Référence / N° série']||'',
+      dateAchat:r.fields['Date achat']||'',
+      garantie:r.fields['Sous garantie']||false,
+      objet:r.fields['Objet']||'',
+      desc:r.fields['Description']||'',
+      photos:r.fields['Photos / Pièces jointes']||[],
+      note:r.fields['Note technicien']||'',
+      tech:r.fields['Technicien assigné']||'',
+      devis:r.fields['Devis HT']||'',
+      devisRef:r.fields['Référence devis']||'',
+      messages:parseMsgs(r.fields['Messages']||''),
+      hist:parseJ(r.fields['Historique statuts']||''),
+      dateCreation:r.fields['Date création']||'',
+      dateResolution:r.fields['Date résolution']||'',
+    }));
+    setSyncStatus('ok');
+    // Mettre à jour le compteur avec le max des refs existantes
+    tickets.forEach(t => {
+      const m = t.ref.match(/SAV-\d{4}-(\d+)/);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > ticketCounter) ticketCounter = n;
+      }
+    });
+    renderClientList(); renderTechList();
+  } catch(e) { setSyncStatus('error'); showToast('Erreur chargement',true); }
+}
+function parseJ(s) { try{return JSON.parse(s);}catch{return[];} }
+
+function parseMsgs(raw) {
+  if (!raw) return [];
+  // Ancien format JSON
+  if (raw.trim().startsWith('[')) { try { return JSON.parse(raw); } catch {} }
+  // Nouveau format texte lisible — on reconstruit les objets
+  return raw.split('\n').filter(l => l.trim()).map(line => {
+    const techMatch = line.match(/^\[Technicien ?([^\]]*)\] (\d{2}:\d{2}) : (.+)$/);
+    const clientMatch = line.match(/^\[Client\] (\d{2}:\d{2}) : (.+)$/);
+    if (techMatch) return { from: 'tech', who: techMatch[1], time: techMatch[2], text: techMatch[3] };
+    if (clientMatch) return { from: 'client', time: clientMatch[1], text: clientMatch[2] };
+    return null;
+  }).filter(Boolean);
+}
+
+// ══════════════════════════════════════
+// PHOTOS
+// ══════════════════════════════════════
+function addPhotos(input) {
+  Array.from(input.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{ photos.push({name:f.name,base64:e.target.result}); renderPrev(); };
+    r.readAsDataURL(f);
+  });
+}
+function renderPrev() {
+  document.getElementById('prev').innerHTML=photos.map((p,i)=>`
+    <div class="tw"><img src="${p.base64}" class="th"><button class="tr" onclick="photos.splice(${i},1);renderPrev()">✕</button></div>`).join('');
+}
+
+// ══════════════════════════════════════
+// SUBMIT TICKET
+// ══════════════════════════════════════
+async function submitTicket() {
+  const nom=v('c-nom'),email=v('c-email'),type=v('c-type'),objet=v('c-obj'),desc=v('c-desc');
+  if (!nom||!email||!type||!objet||!desc) { showToast('⚠ Champs obligatoires manquants',true); return; }
+  const btn=document.getElementById('sub-btn');
+  btn.innerHTML='<span class="spin"></span> Envoi...'; btn.disabled=true;
+  setSyncStatus('syncing');
+
+  // Référence avec date
+  const now=new Date();
+  const yr=now.getFullYear();
+  ticketCounter++;
+  const ref=`SAV-${yr}-${String(ticketCounter).padStart(3,'0')}`;
+  const hist=[{statut:'Ouvert',date:now.toLocaleString('fr-FR'),action:'Ticket créé'}];
+
+  const fields={
+    'Référence ticket':ref,'Statut':'Ouvert','Priorité':v('c-prio'),
+    'Nom client':nom,'Société client':v('c-soc'),'Email client':email,'Téléphone client':v('c-tel'),
+    'Type de matériel':type,'Référence / N° série':v('c-ref'),
+    'Objet':objet,'Description':desc,'Sous garantie':document.getElementById('c-gar').checked,
+    'Date création':now.toISOString(),'Messages':'[]','Historique statuts':JSON.stringify(hist)
+  };
+  const da=v('c-da'); if(da) fields['Date achat']=da;
+  // Photos : stockées localement dans l'app uniquement (Airtable ne supporte pas le base64)
+
+  try {
+    const res=await apiFetch(atBase(),'POST',{fields,typecast:true});
+    if(res.error) throw new Error(res.error.message);
+
+    // Emails — uniquement si déployé sur https (pas en local)
+    const isOnline = window.location.protocol === 'https:';
+    if (isOnline) {
+      try {
+        for(const techEmail of ALL_TECH_EMAILS) {
+          await emailjs.send(EJS_SERVICE, EJS_T1, {
+            to_email: techEmail,
+            ref, priorite:v('c-prio'), nom_client:nom, societe:v('c-soc'),
+            email_client:email, tel_client:v('c-tel'), type_materiel:type,
+            ref_produit:v('c-ref'), date_achat:da||'—',
+            garantie:document.getElementById('c-gar').checked?'Oui':'Non',
+            objet, description:desc, date_creation:now.toLocaleString('fr-FR')
+          });
+        }
+        await emailjs.send(EJS_SERVICE, EJS_T1, {
+          to_email: email,
+          ref, priorite:v('c-prio'), nom_client:nom, societe:v('c-soc'),
+          email_client:email, tel_client:v('c-tel'), type_materiel:type,
+          ref_produit:v('c-ref'), date_achat:da||'—',
+          garantie:document.getElementById('c-gar').checked?'Oui':'Non',
+          objet, description:`Votre ticket a bien été enregistré. Référence : ${ref}\n\nDescription : ${desc}`,
+          date_creation:now.toLocaleString('fr-FR')
+        });
+      } catch(emailErr) {
+        console.warn('EmailJS error (non-blocking):', emailErr);
+      }
+    }
+
+    // Reset form
+    ['c-nom','c-soc','c-email','c-tel','c-ref','c-obj','c-desc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('c-type').value=''; document.getElementById('c-prio').value='Normale';
+    document.getElementById('c-gar').checked=false; document.getElementById('c-da').value='';
+    photos=[]; renderPrev();
+
+    document.getElementById('confref').textContent=ref;
+    const cb=document.getElementById('confbox'); cb.classList.add('on'); setTimeout(()=>cb.classList.remove('on'),7000);
+    setSyncStatus('ok'); showToast('✓ '+ref+' envoyé — Techniciens alertés');
+    await loadTickets();
+  } catch(e) { setSyncStatus('error'); showToast('Erreur : '+e.message,true); }
+  btn.innerHTML='⚡ Envoyer le ticket'; btn.disabled=false;
+}
+
+// ══════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════
+function getTimer(dateStr) {
+  if(!dateStr) return {label:'—',cls:'tok'};
+  const diff=Date.now()-new Date(dateStr).getTime();
+  const h=Math.floor(diff/3600000);
+  const d=Math.floor(h/24);
+  let label='', cls='tok';
+  if(d>0) { label=`${d}j ${h%24}h`; cls=d>2?'tlate':'twrn'; }
+  else { label=`${h}h`; cls=h>8?'twrn':'tok'; }
+  return {label,cls};
+}
+
+// ══════════════════════════════════════
+// CONCLUSION HTML
+// ══════════════════════════════════════
+function conclHtml(label) {
+  if(!label) return '<span class="cn">En attente de décision</span>';
+  const c=CBYLABEL[label];
+  if(!c) return `<span class="concl-badge">${label}</span>`;
+  return `<span class="concl-badge ${c.cls}">${c.icon} ${c.label}</span>`;
+}
+
+// ══════════════════════════════════════
+// RENDER LISTS
+// ══════════════════════════════════════
+function renderClientList() {
+  const el=document.getElementById('cl-list');
+  const clientEmail = (document.getElementById('c-email')||{}).value||'';
+  const myTickets = clientEmail
+    ? tickets.filter(t => t.email && t.email.toLowerCase()===clientEmail.toLowerCase())
+    : [];
+  if(!myTickets.length){
+    el.innerHTML=`<div class="empty"><div class="empty-i">📋</div>${clientEmail?'Aucun ticket pour cet email.':'Renseignez votre email pour voir vos tickets.'}</div>`;
+    return;
+  }
+  el.innerHTML=myTickets.map(t=>{
+    const s=SFAT[t.statut]||'open';
+    return `<div class="tc" onclick="openModal('${t.id}','client')">
+      <div class="tc-top">
+        <div>
+          <div class="tc-ref">${t.ref}</div>
+          <div class="tc-title">${t.objet}</div>
+          <div class="tc-meta">${t.type}${t.refProd?' · '+t.refProd:''} · ${fmtDate(t.dateCreation)}</div>
+        </div>
+        <span class="badge ${SBC[s]}">${t.statut}</span>
+      </div>
+      <div class="tc-bottom">
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Décision :</span>
+        ${conclHtml(t.conclusion)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTechList() {
+  const el=document.getElementById('tech-list');
+  const cnt=document.getElementById('tc-count');
+  let list=tickets;
+  if(filterMode==='open') list=tickets.filter(t=>t.statut==='Ouvert');
+  else if(filterMode==='progress') list=tickets.filter(t=>t.statut==='En cours');
+  else if(filterMode==='resolved') list=tickets.filter(t=>t.statut==='Résolu');
+  else if(filterMode==='urgent') list=tickets.filter(t=>t.prio==='Urgente');
+  else if(['Maxence','Patrick','Alex'].includes(filterMode)) list=tickets.filter(t=>t.tech===filterMode);
+  cnt.textContent=list.length+' TICKET'+(list.length!==1?'S':'');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-i">⚡</div>Aucun ticket.</div>`;return;}
+  el.innerHTML=list.map(t=>{
+    const s=SFAT[t.statut]||'open';
+    const tm=getTimer(t.dateCreation);
+    return `<div class="tc" onclick="openModal('${t.id}','tech')">
+      <div class="tc-top">
+        <div>
+          <div class="tc-ref">${t.ref}</div>
+          <div class="tc-title">${t.objet}</div>
+          <div class="tc-meta">${t.nom}${t.soc?' · '+t.soc:''} · ${t.type}${t.tech?' · 🔧 '+t.tech:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="badge ${SBC[s]}">${t.statut}</span>
+          <span style="font-size:10px;color:var(--muted);">${t.prio}</span>
+          <span class="timer ${tm.cls}">⏱ ${tm.label}</span>
+        </div>
+      </div>
+      <div class="tc-bottom">
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;">Décision :</span>
+        ${conclHtml(t.conclusion)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(mode, btn) {
+  filterMode=mode;
+  document.querySelectorAll('.fc').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderTechList();
+}
+
+// ══════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════
+function openModal(id, viewAs) {
+  currentId=id;
+  const t=tickets.find(x=>x.id===id); if(!t) return;
+  const s=SFAT[t.statut]||'open';
+  setText('m-ref',t.ref); setText('m-title',t.objet);
+  const badge=document.getElementById('m-badge'); badge.textContent=t.statut; badge.className='badge '+SBC[s];
+  setText('m-nom',t.nom||'—'); setText('m-soc',t.soc||'—'); setText('m-email',t.email||'—'); setText('m-tel',t.tel||'—');
+  setText('m-type',t.type||'—'); setText('m-ref2',t.refProd||'—'); setText('m-da',t.dateAchat||'—');
+  document.getElementById('m-gar').innerHTML=t.garantie?'<span class="gy">✓ Déclarée</span>':'<span class="gn">Non déclarée</span>';
+  setText('m-desc',t.desc||'—');
+
+  // Photos
+  const ps=document.getElementById('m-photos-s'), pe=document.getElementById('m-photos');
+  if(t.photos?.length) {
+    ps.style.display='block';
+    pe.innerHTML=t.photos.map(p=>`<div class="tw"><a href="${p.url}" target="_blank"><img src="${p.thumbnails?.small?.url||p.url}" class="th" title="${p.filename}"></a></div>`).join('');
+  } else { ps.style.display='none'; }
+
+  // Historique
+  const hs=document.getElementById('m-hist-s'), he=document.getElementById('m-hist');
+  if(t.hist?.length) {
+    hs.style.display='block';
+    he.innerHTML=t.hist.map(h=>`
+      <div class="hist-item">
+        <div class="hist-dot" style="background:${HIST_COLORS[SFAT[h.statut]||'open']||'var(--muted)'}"></div>
+        <div style="flex:1;font-size:12px;">${h.statut}${h.action?' — '+h.action:''}</div>
+        <div class="hist-date">${h.date}</div>
+      </div>`).join('');
+  } else { hs.style.display='none'; }
+
+  // Tech zone
+  const tz=document.getElementById('tz');
+  tz.style.display=viewAs==='tech'?'block':'none';
+  if(viewAs==='tech') {
+    // Status pills
+    document.getElementById('spills').innerHTML=Object.entries(SL).map(([k,v2])=>`
+      <button class="sp ${s===k?SPC[k]:''}" onclick="changeStatus('${k}')">${v2}</button>`).join('');
+    // Tech selector
+    document.getElementById('m-tech-sel').value=t.tech||'';
+    // Conclusion picker
+    const curKey=t.conclusion?CBYLABEL[t.conclusion]?.key||'':'';
+    document.getElementById('cpicker').innerHTML=CONCLUSIONS.map(c=>`
+      <div class="copt ${curKey===c.key?c.sel:''}" onclick="selectConcl('${c.key}')" id="co-${c.key}">
+        <div class="copt-icon">${c.icon}</div>
+        <div><div class="copt-label">${c.label}</div><div class="copt-desc">${c.desc}</div></div>
+      </div>`).join('');
+    document.getElementById('m-note').value=t.note||'';
+    document.getElementById('m-devis').value=t.devis||'';
+    document.getElementById('m-devis-ref').value=t.devisRef||'';
+  }
+
+  document.getElementById('chat-who').textContent=viewAs==='tech'?'— TECHNICIEN':'— CLIENT';
+  // Outils chat visibles pour tous (client et technicien)
+  const techTools = document.getElementById('chat-tech-tools');
+  if(techTools) techTools.style.display = 'flex';
+  // Placeholder adapté selon rôle
+  const chatIn = document.getElementById('chat-in');
+  if(chatIn) chatIn.placeholder = viewAs==='tech' ? 'Votre message...' : 'Répondre au technicien...';
+  renderChat(t);
+  document.getElementById('modal').classList.add('on');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('on'); currentId=null; }
+
+// ══════════════════════════════════════
+// STATUS
+// ══════════════════════════════════════
+async function changeStatus(s) {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const label=SL[s];
+  const now=new Date();
+  if(!t.hist) t.hist=[];
+  t.hist.push({statut:label,date:now.toLocaleString('fr-FR')});
+  const fields={'Statut':label,'Historique statuts':JSON.stringify(t.hist)};
+  if(s==='resolved'||s==='closed') fields['Date résolution']=now.toISOString();
+  setSyncStatus('syncing');
+  try {
+    await apiFetch(atBase()+'/'+currentId,'PATCH',{fields});
+    t.statut=label;
+    document.getElementById('m-badge').textContent=label;
+    document.getElementById('m-badge').className='badge '+SBC[s];
+    document.querySelectorAll('.sp').forEach(b=>{ b.className='sp'; if(b.textContent.trim()===label) b.classList.add(SPC[s]); });
+    // Update historique display
+    const he=document.getElementById('m-hist');
+    const hs=document.getElementById('m-hist-s'); hs.style.display='block';
+    he.innerHTML=t.hist.map(h=>`
+      <div class="hist-item">
+        <div class="hist-dot" style="background:${HIST_COLORS[SFAT[h.statut]||'open']||'var(--muted)'}"></div>
+        <div style="flex:1;font-size:12px;">${h.statut}${h.action?' — '+h.action:''}</div>
+        <div class="hist-date">${h.date}</div>
+      </div>`).join('');
+    setSyncStatus('ok'); showToast('✓ Statut → '+label);
+    renderTechList();
+    // Notification email au client
+    if (t.email) {
+      try {
+        await emailjs.send(EJS_SERVICE, EJS_T1, {
+          to_email: t.email,
+          sujet: 'Votre ticket ' + t.ref + ' — Statut mis à jour : ' + label,
+          type_notif: 'MISE À JOUR DE VOTRE TICKET',
+          nom_client: t.nom,
+          intro: 'Le statut de votre ticket SAV a été mis à jour par notre équipe technique.',
+          ref: t.ref, priorite: t.prio, societe: t.soc||'—',
+          email_client: t.email, tel_client: t.tel||'—',
+          type_materiel: t.type, ref_produit: t.refProd||'—',
+          garantie: t.garantie?'Oui':'Non',
+          statut: label,
+          technicien: t.tech||'—',
+          details: 'Votre dossier est actuellement au statut : ' + label + '. Connectez-vous sur le portail INV-SAV pour suivre l\'avancement de votre demande.'
+        });
+      } catch(e) { console.warn('Email statut client:', e); }
+    }
+  } catch(e) { setSyncStatus('error'); showToast('Erreur sync',true); }
+}
+
+// ══════════════════════════════════════
+// CONCLUSION
+// ══════════════════════════════════════
+async function selectConcl(key) {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const c=CBYKEY[key]; if(!c) return;
+  document.querySelectorAll('.copt').forEach(el=>{ el.className='copt'; });
+  document.getElementById('co-'+key).classList.add(c.sel);
+  t.conclusion=c.label;
+  setSyncStatus('syncing');
+  try {
+    await apiFetch(atBase()+'/'+currentId,'PATCH',{fields:{'Conclusion SAV':c.label}});
+    setSyncStatus('ok'); showToast('✓ Décision → Airtable');
+    renderClientList(); renderTechList();
+  } catch(e) { setSyncStatus('error'); showToast('Erreur sync conclusion',true); }
+}
+
+// ══════════════════════════════════════
+// SAVE TECH DATA
+// ══════════════════════════════════════
+async function saveTech() {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const note=document.getElementById('m-note').value;
+  const tech=document.getElementById('m-tech-sel').value;
+  const devis=document.getElementById('m-devis').value;
+  const devisRef=document.getElementById('m-devis-ref').value;
+  const fields={'Note technicien':note,'Technicien assigné':tech,'Référence devis':devisRef};
+  if(devis) fields['Devis HT']=parseFloat(devis);
+  setSyncStatus('syncing');
+  try {
+    await apiFetch(atBase()+'/'+currentId,'PATCH',{fields});
+    t.note=note; t.tech=tech; t.devis=devis; t.devisRef=devisRef;
+    setSyncStatus('ok'); showToast('✓ Sauvegardé → Airtable');
+    renderTechList();
+  } catch(e) { setSyncStatus('error'); showToast('Erreur',true); }
+}
+
+// ══════════════════════════════════════
+// CHAT
+// ══════════════════════════════════════
+function renderChat(t) {
+  const box=document.getElementById('chatbox');
+  if(!t.messages?.length) {
+    box.innerHTML=`<div style="text-align:center;color:var(--dim);font-size:11px;font-family:'DM Mono',monospace;padding:20px;">Démarrez la conversation</div>`;
+    return;
+  }
+  box.innerHTML=t.messages.map(m=>`
+    <div class="cm ${m.from==='tech'?'ct':'cl'}">
+      <div class="cb">${m.text}</div>
+      <div class="cm-meta">${m.from==='tech'?'🔧 '+(m.who||'Technicien'):'👤 Client'} · ${m.time}</div>
+    </div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+async function sendMsg() {
+  const input=document.getElementById('chat-in'), text=input.value.trim();
+  if(!text||!currentId) return;
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const techName=document.getElementById('m-tech-sel')?.value||'';
+  const msg={from:role==='tech'?'tech':'client',text,who:role==='tech'?techName:'',time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+  if(!t.messages) t.messages=[];
+  t.messages.push(msg); input.value=''; renderChat(t);
+  try {
+    const msgsText = t.messages.map(m =>
+      `[${m.from === 'tech' ? 'Technicien' + (m.who ? ' ' + m.who : '') : 'Client'}] ${m.time} : ${m.text}`
+    ).join('\n');
+    await apiFetch(atBase()+'/'+currentId,'PATCH',{fields:{'Messages': msgsText}});
+    // Notification email au client si c'est le technicien qui écrit
+    if (role === 'tech' && t.email) {
+      try {
+        await emailjs.send(EJS_SERVICE, EJS_T1, {
+          to_email: t.email,
+          sujet: 'Nouveau message sur votre ticket ' + t.ref,
+          type_notif: 'NOUVEAU MESSAGE DU TECHNICIEN',
+          nom_client: t.nom,
+          intro: 'Votre technicien vous a envoyé un message concernant votre ticket SAV.',
+          ref: t.ref, priorite: t.prio, societe: t.soc||'—',
+          email_client: t.email, tel_client: t.tel||'—',
+          type_materiel: t.type, ref_produit: t.refProd||'—',
+          garantie: t.garantie?'Oui':'Non',
+          statut: t.statut,
+          technicien: msg.who||t.tech||'—',
+          details: text
+        });
+      } catch(e) { console.warn('Email message client:', e); }
+    }
+    // Notification email aux techniciens si c'est le CLIENT qui répond
+    if (role === 'client' && t.tech) {
+      const techEmail = TECHS[t.tech] || null;
+      if (techEmail) {
+        try {
+          await emailjs.send(EJS_SERVICE, EJS_T1, {
+            to_email: techEmail,
+            sujet: 'Réponse client sur le ticket ' + t.ref,
+            type_notif: 'RÉPONSE DU CLIENT',
+            nom_client: t.nom,
+            intro: 'Le client a répondu dans la messagerie du ticket SAV.',
+            ref: t.ref, priorite: t.prio, societe: t.soc||'—',
+            email_client: t.email, tel_client: t.tel||'—',
+            type_materiel: t.type, ref_produit: t.refProd||'—',
+            garantie: t.garantie?'Oui':'Non',
+            statut: t.statut,
+            technicien: t.tech||'—',
+            details: text
+          });
+        } catch(e) { console.warn('Email réponse technicien:', e); }
+      }
+    }
+  }
+  catch(e) { showToast('Erreur sync message',true); }
+}
+
+// ══════════════════════════════════════
+// EMAIL CONFIRM
+// ══════════════════════════════════════
+function openEmailConfirm() {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const techEmail=TECHS[t.tech]||'—';
+  document.getElementById('e-tech-email').textContent=techEmail;
+  document.getElementById('e-client-email').textContent=t.email||'—';
+  document.getElementById('e-client-cb').checked=false;
+  document.getElementById('e-recap').innerHTML=`
+    <div class="rr"><span class="rrl">Référence</span><span class="rrv">${t.ref}</span></div>
+    <div class="rr"><span class="rrl">Client</span><span class="rrv">${t.nom}${t.soc?' — '+t.soc:''}</span></div>
+    <div class="rr"><span class="rrl">Matériel</span><span class="rrv">${t.type}${t.refProd?' · '+t.refProd:''}</span></div>
+    <div class="rr"><span class="rrl">Conclusion</span><span class="rrv" style="color:var(--green);">${t.conclusion||'Non définie'}</span></div>
+    <div class="rr"><span class="rrl">Technicien</span><span class="rrv">${t.tech||'—'}</span></div>`;
+  document.getElementById('emodal').classList.add('on');
+}
+
+function closeEmailConfirm() { document.getElementById('emodal').classList.remove('on'); }
+
+async function sendFinalReport() {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const btn=document.getElementById('e-send-btn');
+  btn.innerHTML='<span class="spin"></span> Envoi...'; btn.disabled=true;
+
+  const inclClient=document.getElementById('e-client-cb').checked;
+  const techEmail=TECHS[t.tech]||null;
+  const devisSection=t.devis?`\n---\nDEVIS\nMontant HT : ${t.devis} €\nRéférence : ${t.devisRef||'—'}`:'';
+  const recipients=['saveria@inv-technology.com','noireaux@inv-technology.com'];
+  if(techEmail&&!recipients.includes(techEmail)) recipients.push(techEmail);
+  if(inclClient&&t.email) recipients.push(t.email);
+
+  const payload={
+    ref:t.ref, objet:t.objet, date_creation:fmtDate(t.dateCreation),
+    date_cloture:new Date().toLocaleString('fr-FR'),
+    nom_client:t.nom, societe:t.soc, email_client:t.email, tel_client:t.tel,
+    type_materiel:t.type, ref_produit:t.refProd, date_achat:t.dateAchat||'—',
+    garantie:t.garantie?'Oui':'Non', objet2:t.objet, description:t.desc,
+    conclusion:t.conclusion||'—', technicien:t.tech||'—',
+    note_technicien:t.note||'—', devis_section:devisSection
+  };
+
+  const isOnline = window.location.protocol === 'https:';
+  try {
+    if (isOnline) {
+      for(const email of recipients) {
+        await emailjs.send(EJS_SERVICE, EJS_T2, {...payload, to_email:email});
+      }
+    }
+    // Clôturer le ticket
+    await changeStatus('closed');
+    closeEmailConfirm();
+    const msg = isOnline
+      ? '✓ Rapport envoyé à '+recipients.length+' destinataire'+(recipients.length>1?'s':'')
+      : '✓ Ticket clôturé (emails actifs après déploiement Netlify)';
+    showToast(msg);
+  } catch(e) { showToast('Erreur envoi email : '+e.message,true); }
+  btn.innerHTML='✓ Confirmer et envoyer'; btn.disabled=false;
+}
+
+// ══════════════════════════════════════
+// VOICE
+// ══════════════════════════════════════
+function toggleVoice(targetId, btnId) {
+  const btn = document.getElementById(btnId);
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showToast('Dictée non disponible — utilisez Chrome', true); return;
+  }
+  if (btn.classList.contains('recording')) {
+    if (window._currentRecog) { window._currentRecog.stop(); window._currentRecog = null; }
+    btn.classList.remove('recording'); btn.textContent = '🎙️ Dicter'; return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recog = new SR();
+  recog.lang = 'fr-FR'; recog.continuous = true; recog.interimResults = false;
+  recog.onresult = e => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+    const el = document.getElementById(targetId);
+    el.value = (el.value ? el.value + ' ' : '') + transcript;
+  };
+  recog.onerror = () => {
+    btn.classList.remove('recording'); btn.textContent = '🎙️ Dicter';
+    showToast('Erreur dictée — vérifiez le micro', true);
+  };
+  recog.onend = () => {
+    btn.classList.remove('recording'); btn.textContent = '🎙️ Dicter';
+  };
+  recog.start();
+  window._currentRecog = recog;
+  btn.classList.add('recording'); btn.textContent = '⏹ Arrêter';
+  showToast('🎙️ Dictée en cours...');
+}
+
+// ══════════════════════════════════════
+// AI IMPROVE
+// ══════════════════════════════════════
+const GROQ_KEY = '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';
+
+async function improveField(fieldId, fieldType) {
+  const input = document.getElementById(fieldId);
+  const text = input.value.trim();
+  if (!text) { showToast('Saisissez du texte à améliorer', true); return; }
+  showToast('✦ Amélioration en cours...');
+  const systemPrompt = fieldType === 'objet'
+    ? 'Tu aides un client à rédiger un objet clair pour son ticket SAV (vidéosurveillance, alarmes, réseaux). Reformule en une courte phrase précise et professionnelle, maximum 10 mots. Garde toutes les informations importantes. Réponds uniquement avec l\'objet reformulé, sans guillemets ni introduction.'
+    : 'Tu aides un client à décrire clairement une panne à un technicien SAV (vidéosurveillance, alarmes, réseaux). Reformule cette description de façon claire, structurée et précise en 2-4 phrases. Garde toutes les informations importantes. Style simple et direct. Réponds uniquement avec la description reformulée, sans introduction.';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        max_tokens: 300,
+        temperature: 0.3
+      })
+    });
+    const data = await res.json();
+    const improved = data.choices?.[0]?.message?.content;
+    if (improved) {
+      input.value = improved;
+      showToast('✦ Texte amélioré');
+    } else {
+      showToast('Erreur IA', true);
+    }
+  } catch(e) {
+    showToast('Erreur IA : ' + e.message, true);
+  }
+}
+
+async function improveChat() {
+  const input = document.getElementById('chat-in');
+  const text = input.value.trim();
+  if (!text) { showToast('Saisissez un message à améliorer', true); return; }
+  showToast('✦ Amélioration en cours...');
+  const systemPrompt = role === 'tech'
+    ? 'Tu es un technicien SAV professionnel chez INV Technology (vidéosurveillance, alarmes, réseaux). Reformule ce message destiné au client en 1-2 phrases claires, directes et rassurantes. Garde le sens exact du message original sans rien inventer. Style : professionnel mais accessible, pas trop formel. Réponds uniquement avec le message reformulé, sans guillemets ni introduction.'
+    : 'Tu aides un client à rédiger un message clair pour son technicien SAV. Reformule ce message en 1-2 phrases claires et précises, en gardant toutes les informations importantes. Style : simple, direct, poli. Réponds uniquement avec le message reformulé, sans guillemets ni introduction.';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_KEY
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        max_tokens: 200,
+        temperature: 0.3
+      })
+    });
+    const data = await res.json();
+    const improved = data.choices?.[0]?.message?.content;
+    if (improved) {
+      input.value = improved;
+      showToast('✦ Message amélioré');
+    } else {
+      showToast('Erreur IA', true);
+    }
+  } catch(e) {
+    showToast('Erreur IA : ' + e.message, true);
+  }
+}
+
+async function improveNote() {
+  const note = document.getElementById('m-note').value.trim();
+  if (!note) { showToast('Saisissez une note à améliorer', true); return; }
+  showToast('✦ Amélioration en cours...');
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_KEY
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'Tu es un technicien SAV senior chez INV Technology, spécialisé en vidéosurveillance, alarmes et réseaux. Reformule cette note technique en 1-2 phrases maximum, professionnelles et précises. Conserve UNIQUEMENT les informations présentes dans la note originale, sans rien ajouter ni inventer. Pas de titres, pas de structure, pas de détails supplémentaires. Réponds uniquement avec la note reformulée.' },
+          { role: 'user', content: note }
+        ],
+        max_tokens: 500,
+        temperature: 0.3
+      })
+    });
+    const data = await res.json();
+    const improved = data.choices?.[0]?.message?.content;
+    if (improved) {
+      document.getElementById('m-note').value = improved;
+      showToast('✦ Note améliorée par IA');
+    } else {
+      showToast('Erreur IA', true);
+    }
+  } catch(e) {
+    showToast('Erreur IA : ' + e.message, true);
+  }
+}
+
+// ══════════════════════════════════════
+// PDF
+// ══════════════════════════════════════
+function generatePDF() {
+  const t=tickets.find(x=>x.id===currentId); if(!t) return;
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  // Header
+  doc.setFillColor(12,14,20); doc.rect(0,0,210,34,'F');
+  doc.setTextColor(79,142,247); doc.setFontSize(20); doc.setFont('helvetica','bold'); doc.text('INV-SAV',14,15);
+  doc.setTextColor(100,100,140); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text('INV TECHNOLOGY — RAPPORT D\'INTERVENTION SAV',14,24);
+  doc.setTextColor(79,142,247); doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.text(t.ref,185,15,{align:'right'});
+  doc.setTextColor(100,100,140); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text(fmtDate(t.dateCreation),185,24,{align:'right'});
+  // Status bar
+  doc.setFillColor(25,28,42); doc.rect(0,34,210,12,'F');
+  doc.setTextColor(140,140,180); doc.setFontSize(8);
+  doc.text('STATUT : '+t.statut+'   ·   PRIORITÉ : '+t.prio+(t.garantie?'   ·   SOUS GARANTIE':'')+(t.tech?'   ·   TECH : '+t.tech:''),14,42);
+  // Conclusion
+  if(t.conclusion) {
+    doc.setFillColor(13,43,26); doc.rect(0,46,210,14,'F');
+    doc.setTextColor(79,247,160); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('DÉCISION SAV : '+t.conclusion.toUpperCase(),14,56);
+  }
+  let y=t.conclusion?72:58;
+  const sec=(title)=>{ doc.setFillColor(30,33,50); doc.rect(10,y-5,190,8,'F'); doc.setTextColor(79,142,247); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(title,14,y); y+=10; };
+  const row2=(l1,v1,l2,v2)=>{ doc.setTextColor(120,120,160); doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.text(l1+':',14,y); doc.text(l2+':',110,y); doc.setTextColor(50,50,70); doc.setFontSize(10); doc.text(v1||'—',55,y); doc.text(v2||'—',150,y); y+=8; };
+  const blk=(label,value)=>{ doc.setTextColor(120,120,160); doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.text(label+':',14,y); y+=5; doc.setTextColor(50,50,70); doc.setFontSize(10); doc.setFont('helvetica','normal'); const lines=doc.splitTextToSize(value||'—',182); doc.text(lines,14,y); y+=lines.length*5.5+4; };
+  sec('CLIENT'); row2('Nom',t.nom,'Société',t.soc); row2('Email',t.email,'Téléphone',t.tel);
+  sec('MATÉRIEL'); row2('Type',t.type,'Réf / N° série',t.refProd); row2('Date achat',t.dateAchat,'Garantie',t.garantie?'Oui':'Non');
+  sec('PANNE'); doc.setTextColor(50,50,70); doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.text(t.objet,14,y); y+=8; blk('Description',t.desc);
+  if(t.note||t.tech) { sec('INTERVENTION'); if(t.tech) row2('Technicien',t.tech,'Résolution',t.dateResolution?fmtDate(t.dateResolution):'—'); if(t.note) blk('Notes',t.note); }
+  if(t.devis) { sec('DEVIS'); row2('Montant HT',t.devis+' €','Référence',t.devisRef||'—'); }
+  if(t.hist?.length) { sec('HISTORIQUE'); t.hist.forEach(h=>{ doc.setTextColor(100,100,130); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text(h.statut+' · '+h.date,14,y); y+=5; }); y+=3; }
+  if(t.messages?.length) {
+    sec('ÉCHANGES');
+    t.messages.forEach(m=>{ doc.setTextColor(m.from==='tech'?30:90,m.from==='tech'?100:90,m.from==='tech'?160:150); doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.text((m.from==='tech'?'🔧 '+(m.who||'Tech'):'👤 Client')+' · '+m.time,14,y); y+=5; doc.setTextColor(60,60,80); doc.setFont('helvetica','normal'); doc.setFontSize(10); const ml=doc.splitTextToSize(m.text,182); doc.text(ml,14,y); y+=ml.length*5+3; });
+  }
+  // Footer
+  doc.setFillColor(12,14,20); doc.rect(0,282,210,16,'F');
+  doc.setTextColor(80,80,110); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('INV Technology · INV-SAV · '+new Date().toLocaleDateString('fr-FR'),14,291);
+  doc.text(t.ref,185,291,{align:'right'});
+  doc.save('Rapport_'+t.ref+'.pdf');
+  showToast('✓ PDF généré');
+}
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+const TECH_PASSWORD = 'invtechnology2b!';
+
+function switchRole(r) {
+  if (r === 'tech') {
+    let isAuth = false;
+    try { isAuth = localStorage.getItem('inv_tech_auth') === 'true'; } catch(e) {}
+    if (isAuth) {
+      activateTechRole();
+    } else {
+      document.getElementById('pwd-modal').classList.add('on');
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('pwd-error').style.display = 'none';
+      setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+    }
+    return;
+  }
+  activateClientRole();
+}
+
+function showPasswordModal() {
+  document.getElementById('pwd-modal').classList.add('on');
+  document.getElementById('pwd-input').value='';
+  setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+}
+
+function checkPassword() {
+  const pwd = document.getElementById('pwd-input').value;
+  if (pwd === TECH_PASSWORD) {
+    try { localStorage.setItem('inv_tech_auth', 'true'); } catch(e) {}
+    document.getElementById('pwd-modal').classList.remove('on');
+    document.getElementById('pwd-error').style.display = 'none';
+    activateTechRole();
+  } else {
+    document.getElementById('pwd-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function activateTechRole() {
+  role = 'tech';
+  document.querySelectorAll('.role-btn').forEach((b,i) => b.classList.toggle('on', i === 1));
+  document.getElementById('v-client').classList.remove('on');
+  document.getElementById('v-tech').classList.add('on');
+  loadTickets();
+}
+
+function activateClientRole() {
+  role = 'client';
+  document.querySelectorAll('.role-btn').forEach((b,i) => b.classList.toggle('on', i === 0));
+  document.getElementById('v-client').classList.add('on');
+  document.getElementById('v-tech').classList.remove('on');
+}
+function v(id) { return document.getElementById(id)?.value?.trim()||''; }
+function setText(id,txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
+function fmtDate(iso) {
+  if(!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch { return iso; }
+}
+function setSyncStatus(s) {
+  const dot=document.getElementById('sdot'), lbl=document.getElementById('slbl');
+  dot.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
+  lbl.textContent=s==='syncing'?'Sync...':s==='error'?'Erreur':'Airtable ✓';
+}
+function showToast(msg,isErr=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(isErr?' err':'');
+  t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),3500);
+}
+</script>
+</body>
+</html>
