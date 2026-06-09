@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INV-SAV — INV Technology</title>
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#2563EB">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="INV-SAV">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -196,6 +196,13 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .cm.ct .cm-meta { text-align: right; }
 .chat-row { display: flex; gap: 8px; margin-top: 8px; }
 .chat-row .fi { flex: 1; }
+.chat-video { max-width: 100%; max-height: 200px; border-radius: 8px; display: block; margin-top: 4px; }
+.chat-yt { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: 8px; padding: 10px; text-decoration: none; color: var(--text); margin-top: 4px; }
+.chat-yt:hover { opacity: 0.85; }
+.chat-yt-thumb { width: 80px; height: 56px; object-fit: cover; border-radius: 5px; flex-shrink: 0; }
+.chat-yt-info { font-size: 12px; line-height: 1.4; }
+.chat-yt-icon { font-size: 22px; flex-shrink: 0; }
+.chat-attach-bar { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
 
 /* ── HISTORY ── */
 .hist-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
@@ -485,9 +492,11 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       <div class="ms">
         <div class="mst">Messagerie <span id="chat-who" style="color:var(--accent);font-size:9px;"></span></div>
         <div class="chatbox" id="chatbox"></div>
-        <div id="chat-tech-tools" style="display:flex;gap:6px;margin-top:6px;margin-bottom:6px;">
+        <div id="chat-tech-tools" style="display:flex;gap:6px;margin-top:6px;margin-bottom:6px;flex-wrap:wrap;">
           <button class="voice-btn" id="voice-chat-btn" onclick="toggleVoice('chat-in','voice-chat-btn')">🎙️ Dicter</button>
           <button class="ai-btn" onclick="improveChat()">✦ Améliorer IA</button>
+          <label class="voice-btn" style="cursor:pointer;" title="Envoyer une vidéo">📎 Vidéo<input type="file" accept="video/*" style="display:none;" onchange="sendVideo(this)"></label>
+          <button class="voice-btn" onclick="sendYouTube()" title="Partager un lien YouTube">🎬 YouTube</button>
         </div>
         <div class="chat-row">
           <textarea class="fi" id="chat-in" placeholder="Votre message..." rows="3" style="resize:vertical;min-height:64px;line-height:1.5;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
@@ -572,7 +581,7 @@ async function installPWA() {
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
@@ -1100,12 +1109,91 @@ function renderChat(t) {
     box.innerHTML=`<div style="text-align:center;color:var(--dim);font-size:11px;font-family:'DM Mono',monospace;padding:20px;">Démarrez la conversation</div>`;
     return;
   }
-  box.innerHTML=t.messages.map(m=>`
-    <div class="cm ${m.from==='tech'?'ct':'cl'}">
-      <div class="cb">${m.text}</div>
+  box.innerHTML=t.messages.map(m=>{
+    let content = '';
+    if (m.type === 'video' && m.videoData) {
+      content = `<video class="chat-video" controls src="${m.videoData}"></video>`;
+      if (m.text) content += `<div style="font-size:12px;color:var(--muted);margin-top:3px;">${m.text}</div>`;
+    } else if (m.type === 'youtube' && m.ytId) {
+      const thumb = `https://img.youtube.com/vi/${m.ytId}/mqdefault.jpg`;
+      content = `<a class="chat-yt" href="https://www.youtube.com/watch?v=${m.ytId}" target="_blank">
+        <img class="chat-yt-thumb" src="${thumb}" alt="YouTube" onerror="this.style.display='none'">
+        <div class="chat-yt-info"><div style="font-weight:600;font-size:13px;">▶ Lien YouTube</div><div style="color:var(--muted);font-size:11px;">youtube.com/watch?v=${m.ytId}</div></div>
+      </a>`;
+    } else {
+      content = `<div class="cb">${m.text}</div>`;
+    }
+    return `<div class="cm ${m.from==='tech'?'ct':'cl'}">
+      ${content}
       <div class="cm-meta">${m.from==='tech'?'🔧 '+(m.who||'Technicien'):'👤 Client'} · ${m.time}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   box.scrollTop=box.scrollHeight;
+}
+
+function getYtId(url) {
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function sendVideo(input) {
+  if (!input.files[0] || !currentId) return;
+  const file = input.files[0];
+  if (file.size > 50 * 1024 * 1024) { showToast('Vidéo trop lourde (max 50 Mo)', true); return; }
+  showToast('Chargement de la vidéo...');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const t = tickets.find(x => x.id === currentId); if (!t) return;
+    const techName = document.getElementById('m-tech-sel')?.value || '';
+    const msg = {
+      from: role === 'tech' ? 'tech' : 'client',
+      type: 'video',
+      videoData: e.target.result,
+      text: file.name,
+      who: role === 'tech' ? techName : '',
+      time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
+    };
+    if (!t.messages) t.messages = [];
+    t.messages.push(msg);
+    renderChat(t);
+    showToast('✓ Vidéo envoyée');
+    // Sauvegarder en Airtable (sans la vidéo, juste la mention)
+    try {
+      const msgsText = t.messages.map(m =>
+        `[${m.from==='tech'?'Technicien'+(m.who?' '+m.who:''):'Client'}] ${m.time} : ${m.type==='video'?'[Vidéo: '+m.text+']':m.type==='youtube'?'[YouTube: '+m.ytId+']':m.text}`
+      ).join('\n');
+      await apiFetch(atBase()+'/'+currentId,'PATCH',{fields:{'Messages': msgsText}});
+    } catch(e) {}
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function sendYouTube() {
+  const url = prompt('Collez le lien YouTube :');
+  if (!url) return;
+  const ytId = getYtId(url);
+  if (!ytId) { showToast('Lien YouTube invalide', true); return; }
+  const t = tickets.find(x => x.id === currentId); if (!t) return;
+  const techName = document.getElementById('m-tech-sel')?.value || '';
+  const msg = {
+    from: role === 'tech' ? 'tech' : 'client',
+    type: 'youtube',
+    ytId,
+    text: '',
+    who: role === 'tech' ? techName : '',
+    time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
+  };
+  if (!t.messages) t.messages = [];
+  t.messages.push(msg);
+  renderChat(t);
+  showToast('✓ Lien YouTube partagé');
+  try {
+    const msgsText = t.messages.map(m =>
+      `[${m.from==='tech'?'Technicien'+(m.who?' '+m.who:''):'Client'}] ${m.time} : ${m.type==='video'?'[Vidéo: '+m.text+']':m.type==='youtube'?'[YouTube: https://youtu.be/'+m.ytId+']':m.text}`
+    ).join('\n');
+    await apiFetch(atBase()+'/'+currentId,'PATCH',{fields:{'Messages': msgsText}});
+  } catch(e) {}
 }
 
 async function sendMsg() {
